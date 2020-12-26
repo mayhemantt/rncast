@@ -1,0 +1,163 @@
+import React from "react";
+import Styled from "styled-components";
+import { Animated, TouchableOpacity, Dimensions } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import MenuItem from "./MenuItem";
+import { connect } from "react-redux";
+
+function mapStateToProps(state) {
+  return { action: state.action };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    closeMenu: () =>
+      dispatch({
+        type: "CLOSE_MENU",
+      }),
+  };
+}
+
+const ScreenHeight = Dimensions.get("window").height;
+// const ScreenHeight = 600;
+
+class Menu extends React.Component {
+  state = {
+    top: new Animated.Value(ScreenHeight),
+  };
+
+  componentDidMount() {
+    this.toggleMenu();
+  }
+
+  componentDidUpdate() {
+    this.toggleMenu();
+  }
+
+  toggleMenu = () => {
+    if (this.props.action == "openMenu") {
+      Animated.spring(this.state.top, {
+        toValue: 54,
+        useNativeDriver: false,
+      }).start();
+    }
+
+    if (this.props.action == "closeMenu") {
+      Animated.spring(this.state.top, {
+        toValue: ScreenHeight,
+        useNativeDriver: false,
+      }).start();
+    }
+  };
+
+  render() {
+    return (
+      <AnimatedContainer style={{ top: this.state.top }}>
+        <Cover>
+          <Image source={require("../assets/background2.jpg")} />
+          <Title>Hemant</Title>
+          <Subtitle>Full Stack Developer</Subtitle>
+        </Cover>
+        <TouchableOpacity
+          onPress={this.props.closeMenu}
+          style={{
+            position: "absolute",
+            top: 120,
+            left: "50%",
+            marginLeft: -22,
+            zIndex: 1,
+          }}>
+          <CloseView>
+            <Ionicons name="close" size={44} color="#546bfb" />
+          </CloseView>
+        </TouchableOpacity>
+        <Content>
+          {items.map((item, index) => (
+            <MenuItem
+              title={item.title}
+              key={index}
+              icon={item.icon}
+              text={item.text}
+            />
+          ))}
+        </Content>
+      </AnimatedContainer>
+    );
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Menu);
+//
+const Image = Styled.Image`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+`;
+const Title = Styled.Text`
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+`;
+
+const Subtitle = Styled.Text`
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top:8px;
+`;
+
+const Container = Styled.View`
+   position: absolute;
+   background: white;
+   width: 100%;
+   height: 100%;
+   z-index: 100;
+   border-radius:10px;
+   overflow: hidden;
+`;
+
+const AnimatedContainer = Animated.createAnimatedComponent(Container);
+const Cover = Styled.View`
+   height: 142px;
+   background: black;
+   justify-content: center;
+   align-items: center;
+`;
+
+const CloseView = Styled.View`
+   width:44px;
+   height: 44px;
+   border-radius: 22px;
+   background: white;
+   justify-content: center;
+   align-items: center;
+   box-shadow: 0 5px 10px rgba(0,0,0, 0.15);
+`;
+
+const Content = Styled.View`
+   height: ${ScreenHeight};
+   background: #f0f3f5;
+   padding: 50px;
+`;
+
+const items = [
+  {
+    icon: "settings",
+    title: "Account",
+    text: "settings",
+  },
+  {
+    icon: "card",
+    title: "Billing",
+    text: "payments",
+  },
+  {
+    icon: "compass",
+    title: "Learn React",
+    text: "start courses",
+  },
+  {
+    icon: "exit",
+    title: "Log Out",
+    text: "see you soon",
+  },
+];
