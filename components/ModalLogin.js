@@ -5,25 +5,84 @@ import {
 } from "react-native-gesture-handler";
 import styled from "styled-components";
 import { BlurView } from "expo-blur";
-import { Keyboard } from "react-native";
+import { Keyboard, Alert, Animated, Dimensions } from "react-native";
 import Success from "./Success";
-class ModalLogin extends React.Component {
-  // constructor(props) {
-  //   super(props);
-  //   this.handleLogin = this.handleLogin.bind(this);
-  //   this.focusPassword = this.focusPassword.bind(this);
-  // }
+import Loading from "./Loading";
+import { connect } from "react-redux";
 
-  // hooks have resolved this where you cant use class comps with react hooks
+const screenHeight = Dimensions.get("window").height;
+
+function mapStateToProps(state) {
+  return { action: state.action };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    closeLogin: () =>
+      dispatch({
+        type: "CLOSE_LOGIN",
+      }),
+  };
+}
+class ModalLogin extends React.Component {
   state = {
     email: "",
     password: "",
     iconEmail: require("../assets/icon-email.png"),
     iconPassword: require("../assets/icon-password.png"),
+    isSuccessful: false,
+    isLoading: false,
+    top: new Animated.Value(screenHeight),
+    scale: new Animated.Value(1.3),
+    translateY: new Animated.Value(0),
   };
 
+  componentDidUpdate() {
+    if (this.props.action === "openLogin") {
+      Animated.timing(this.state.top, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: false,
+      }).start();
+      Animated.spring(this.state.scale, {
+        toValue: 1,
+        useNativeDriver: false,
+      }).start();
+      Animated.timing(this.state.translateY, {
+        toValue: 0,
+        useNativeDriver: false,
+      }).start();
+    }
+    if (this.props.action === "closeLogin") {
+      setTimeout(() => {
+        Animated.timing(this.state.top, {
+          toValue: screenHeight,
+          useNativeDriver: false,
+          duration: 0,
+        }).start();
+        Animated.spring(this.state.scale, {
+          toValue: 1.3,
+          useNativeDriver: false,
+        }).start();
+      }, 1000);
+    }
+  }
+
   handleLogin = () => {
-    console.log("Submit");
+    Keyboard.dismiss();
+
+    this.setState({
+      isLoading: true,
+    });
+    setTimeout(() => {
+      this.setState({ isLoading: false, isSuccessful: true });
+      Alert.alert("Congrats", "You've Logged successfully!");
+
+      setTimeout(() => {
+        this.props.closeLogin();
+        this.setState({ isSuccessful: false });
+      }, 2000);
+    }, 2000);
   };
 
   focusEmail = () => {
@@ -41,16 +100,24 @@ class ModalLogin extends React.Component {
 
   tabBack = () => {
     Keyboard.dismiss();
+    this.props.closeLogin();
   };
 
   // this.focusPassword = this.focusPassword.bind(this)
   render() {
     return (
-      <Container>
-        <TouchableWithoutFeedback onPress={this.tapBack}>
+      <AnimatedContainer style={{ top: this.state.top }}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            this.tabBack();
+          }}
+          style={{
+            height: screenHeight / 2 - 370,
+            width: "100%",
+          }}>
           <BlurView
-            tint="default"
-            intensity={100}
+            tint="dark"
+            intensity={1000}
             style={{
               position: "absolute",
               width: "100%",
@@ -81,13 +148,34 @@ class ModalLogin extends React.Component {
             </Button>
           </TouchableOpacity>
         </Modal>
-        <Success />
-      </Container>
+        {this.state.isSuccessful && (
+          <Success isActive={this.state.isSuccessful} />
+        )}
+        {this.state.isLoading && <Loading isActive={this.state.isLoading} />}
+        <TouchableWithoutFeedback
+          onPress={() => {
+            this.tabBack();
+          }}>
+          <TouchableOpacity>
+            <Text>close</Text>
+          </TouchableOpacity>
+          <BlurView
+            tint="default"
+            intensity={100}
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        </TouchableWithoutFeedback>
+      </AnimatedContainer>
     );
   }
 }
 
-export default ModalLogin;
+export default connect(mapStateToProps, mapDispatchToProps)(ModalLogin);
+
 const Container = styled.View`
   position: absolute;
   top: 0;
@@ -98,6 +186,7 @@ const Container = styled.View`
   justify-content: center;
   align-items: center;
 `;
+const AnimatedContainer = Animated.createAnimatedComponent(Container);
 
 const Modal = styled.View`
   width: 335px;

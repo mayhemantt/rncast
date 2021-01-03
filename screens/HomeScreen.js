@@ -61,6 +61,10 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     openMenu: () => dispatch({ type: "OPEN_MENU" }),
+    openLogin: () =>
+      dispatch({
+        type: "OPEN_LOGIN",
+      }),
   };
 }
 
@@ -131,7 +135,7 @@ class HomeScreen extends React.Component {
               onScrollToTop={() => StatusBar.setBarStyle("default", true)}>
               <TitleBar>
                 <TouchableOpacity
-                  onPress={this.props.openMenu}
+                  onPress={this.props.openLogin}
                   style={{ position: "absolute", top: 0, left: 20 }}>
                   <Avatar />
                 </TouchableOpacity>

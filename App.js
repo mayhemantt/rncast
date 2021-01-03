@@ -16,7 +16,7 @@ const client = new ApolloClient({
 
 const initialState = {
   action: "",
-  name: "_",
+  name: "",
 };
 
 const reducer = (state = initialState, action) => {
@@ -31,6 +31,10 @@ const reducer = (state = initialState, action) => {
       return { action: "openCard" };
     case "CLOSE_CARD":
       return { action: "closeCard" };
+    case "OPEN_LOGIN":
+      return { action: "openLogin" };
+    case "CLOSE_LOGIN":
+      return { action: "closeLogin" };
     default:
       return state;
   }
