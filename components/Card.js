@@ -1,23 +1,31 @@
 import React from "react";
 import styled from "styled-components";
 
-const Card = (props) => (
-  <Container>
-    <Cover>
-      <Image source={props.image} />
-      <Title>{props.title}</Title>
-    </Cover>
-    <Content>
-      <Logo source={props.logo} />
-      <Wrapper>
-        <Caption>{props.caption}</Caption>
-        <Subtitle>{props.subtitle}</Subtitle>
-      </Wrapper>
-    </Content>
-  </Container>
-);
+const Card = (props) => {
+  // console.log(props);
+  return (
+    <Container style={{ elevation: 10 }}>
+      {props && (
+        <View>
+          <Cover>
+            <Image source={{ uri: props.image.url }} />
+            <Title>{props.title}</Title>
+          </Cover>
+          <Content>
+            <Logo source={{ uri: props.logo.url }} />
+            <Wrapper>
+              <Caption>{props.caption}</Caption>
+              <Subtitle>{props.subtitles}</Subtitle>
+            </Wrapper>
+          </Content>
+        </View>
+      )}
+    </Container>
+  );
+};
 
 export default Card;
+const View = styled.View``;
 
 const Wrapper = styled.View`
   margin-left: 10px;
@@ -54,8 +62,7 @@ const Container = styled.View`
   width: 315px;
   height: 280px;
   border-radius: 14px;
-  margin-left: 20px;
-  margin-top: 20px;
+  margin: 20px 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 `;
 

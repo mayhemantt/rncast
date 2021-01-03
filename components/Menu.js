@@ -134,7 +134,7 @@ const CloseView = Styled.View`
 `;
 
 const Content = Styled.View`
-   height: ${ScreenHeight};
+   height: ${ScreenHeight}px;
    background: #f0f3f5;
    padding: 50px;
 `;

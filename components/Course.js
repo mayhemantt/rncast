@@ -1,17 +1,22 @@
 import React from "react";
 import styled from "styled-components";
+import { Dimensions } from "react-native";
+
+const ScreenWidth = Dimensions.get("window").width;
+
+var cardWidth = ScreenWidth - 40;
 
 const Course = (props) => {
   return (
-    <Container>
+    <Container style={{ width: cardWidth }}>
       <Cover>
-        <Image source={props.image} />
-        <Logo source={props.logo} resizeMode={"contain"} />
+        <Image source={{ uri: props.image }} />
+        <Logo source={{ uri: props.logo }} resizeMode={"contain"} />
         <Subtitle>{props.subtitle}</Subtitle>
         <Title>{props.title}</Title>
       </Cover>
       <Content>
-        <Avatar source={props.avatar} />
+        <Avatar source={{ uri: props.avatar }} />
         <Caption>{props.caption}</Caption>
         <Author>Taught by {props.author}</Author>
       </Content>
@@ -25,7 +30,7 @@ const Container = styled.View`
   width: 315px;
   height: 335px;
   background: white;
-  margin: 10px 20px;
+  margin: 10px 0px 10px 20px;
   border-radius: 14px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 `;

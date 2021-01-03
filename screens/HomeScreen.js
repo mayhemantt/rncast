@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
+  Dimensions,
 } from "react-native";
 import styled from "styled-components";
 import Card from "../components/Card";
@@ -14,9 +15,47 @@ import { NotificationIcon } from "../components/Icons";
 import Logo from "../components/Logo";
 import Menu from "../components/Menu";
 import { connect } from "react-redux";
+import Avatar from "../components/Avatar";
+import { gql } from "@apollo/client";
+import { Query } from "@apollo/client/react/components";
+import ModalLogin from "../components/ModalLogin";
+// console.log = function () {};
+
+const CardsQuery = gql`
+  {
+    cardsCollection {
+      items {
+        title
+        subtitles
+        image {
+          title
+          description
+          contentType
+          fileName
+          size
+          url
+          width
+          height
+        }
+        caption
+        logo {
+          title
+          description
+          contentType
+          fileName
+          size
+          url
+          width
+          height
+        }
+        content
+      }
+    }
+  }
+`;
 
 function mapStateToProps(state) {
-  return { action: state.action };
+  return { action: state.action, name: state.name };
 }
 
 function mapDispatchToProps(dispatch) {
@@ -25,15 +64,23 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
+const ScreenWidth = Dimensions.get("window").width;
+
+var cardWidth = ScreenWidth - 40;
+
+if (ScreenWidth >= 120) {
+  cardWidth = (ScreenWidth - 80) / 3;
+}
+
 class HomeScreen extends React.Component {
   state = { scale: new Animated.Value(1), opacity: new Animated.Value(1) };
   componentDidMount() {
-    StatusBar.setBarStyle("light", true);
+    StatusBar.setBarStyle("transparent", true);
   }
 
   componentDidUpdate() {
     this.toggleMenu();
-    StatusBar.setBarStyle("light", true);
+    StatusBar.setBarStyle("transparent", true);
   }
 
   toggleMenu() {
@@ -49,7 +96,7 @@ class HomeScreen extends React.Component {
         useNativeDriver: false,
       }).start();
 
-      StatusBar.setBarStyle("light-content", true);
+      StatusBar.setBarStyle("transparent", true);
     }
 
     if (this.props.action == "closeMenu") {
@@ -63,15 +110,14 @@ class HomeScreen extends React.Component {
         useNativeDriver: false,
         toValue: 1,
       }).start();
-
-      StatusBar.setBarStyle("dark-content", true);
+      StatusBar.setBarStyle("transparent", true);
     }
   }
 
   render() {
     return (
       <RootView>
-        <Menu />
+        {this.props && this.props.action == "openMenu" && <Menu />}
         <AnimatedContainer
           style={{
             transform: [{ scale: this.state.scale }],
@@ -80,15 +126,19 @@ class HomeScreen extends React.Component {
           <SafeAreaView>
             <ScrollView
               view={{ height: "100%" }}
-              showsVerticalScrollIndicator={false}>
+              showsVerticalScrollIndicator={false}
+              onScroll={() => StatusBar.setBarStyle("dark-content", true)}
+              onScrollToTop={() => StatusBar.setBarStyle("default", true)}>
               <TitleBar>
                 <TouchableOpacity
                   onPress={this.props.openMenu}
                   style={{ position: "absolute", top: 0, left: 20 }}>
-                  <Avatar source={require("../assets/profile.jpg")} />
+                  <Avatar />
                 </TouchableOpacity>
                 <Title>Welcome Back</Title>
-                <Name> Hemant</Name>
+                <Container>
+                  <Name>{this.props.name}</Name>
+                </Container>
                 <NotificationIcon
                   style={{ position: "absolute", right: 20, top: 7 }}
                 />
@@ -104,46 +154,79 @@ class HomeScreen extends React.Component {
                 horizontal={true}>
                 {logos.map((logo, index) => {
                   return (
-                    <Logo key={index} image={logo.image} text={logo.text} />
-                  );
-                })}
-              </ScrollView>
-              <SubTitle>Continue Learning</SubTitle>
-              <ScrollView
-                horizontal={true}
-                style={{ paddingBottom: 30 }}
-                showsHorizontalScrollIndicator={false}>
-                {cards.map((card, index) => {
-                  return (
-                    <Card
+                    <Logo
                       key={index}
-                      title={card.title}
-                      image={card.image}
-                      caption={card.caption}
-                      logo={card.logo}
-                      subtitle={card.subtitle}
+                      image={{ uri: logo.image }}
+                      text={logo.text}
                     />
                   );
                 })}
               </ScrollView>
-              <SubTitle>Popular Courses</SubTitle>
-              {courses.map((course, index) => {
-                return (
-                  <Course
-                    key={index}
-                    image={course.image}
-                    title={course.title}
-                    subtitle={course.subtitle}
-                    logo={course.logo}
-                    author={course.author}
-                    avatar={course.avatar}
-                    caption={course.caption}
-                  />
-                );
-              })}
+              <SubTitle>{"Continue Learning".toUpperCase()}</SubTitle>
+              <ScrollView
+                horizontal={true}
+                style={{ paddingBottom: 30 }}
+                showsHorizontalScrollIndicator={false}>
+                <Query query={CardsQuery}>
+                  {({ loading, error, data }) => {
+                    if (error) {
+                      return <Message>Error!!</Message>;
+                    }
+                    if (loading) {
+                      return <Message>Loading ..</Message>;
+                    }
+                    // console.log(data.cardsCollection.items);
+                    return (
+                      <CardsContainer>
+                        {data.cardsCollection.items.map((card, index) => (
+                          <TouchableOpacity
+                            key={index}
+                            onPress={() => {
+                              this.props.navigation.navigate("Section", {
+                                section: card,
+                              });
+                            }}>
+                            <Card
+                              title={card.title}
+                              image={card.image}
+                              caption={card.caption}
+                              logo={card.logo}
+                              subtitle={card.subtitle}
+                              content={card.content}
+                            />
+                          </TouchableOpacity>
+                        ))}
+                      </CardsContainer>
+                    );
+                  }}
+                </Query>
+                {/* {cards.map((card, index) => {
+                  return (
+                    
+                  );
+                })} */}
+              </ScrollView>
+              <SubTitle>{"Popular Courses".toUpperCase()}</SubTitle>
+              <CoursesContainer>
+                {courses.map((course, index) => {
+                  return (
+                    <Course
+                      key={index}
+                      image={course.image}
+                      title={course.title}
+                      subtitle={course.subtitle}
+                      logo={course.logo}
+                      author={course.author}
+                      avatar={course.avatar}
+                      caption={course.caption}
+                    />
+                  );
+                })}
+              </CoursesContainer>
             </ScrollView>
           </SafeAreaView>
         </AnimatedContainer>
+        <ModalLogin />
       </RootView>
     );
   }
@@ -151,9 +234,21 @@ class HomeScreen extends React.Component {
 
 export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);
 
+const CoursesContainer = styled.View`
+  flex-direction: row;
+  flex-wrap: wrap;
+`;
+
 const RootView = styled.View`
   background: black;
   flex: 1;
+`;
+
+const Message = styled.Text`
+  margin: 20px;
+  color: #b8bece;
+  font-size: 15px;
+  font-weight: 500;
 `;
 
 const SubTitle = styled.Text`
@@ -161,16 +256,13 @@ const SubTitle = styled.Text`
   font-weight: 600;
   font-size: 15px;
   margin-left: 20px;
-  margin-top: 20px;
+  margin-top: 10px;
   text-transform: uppercase;
 `;
 
-const Avatar = styled.Image`
-  width: 44px;
-  height: 44px;
-  background: black;
-  border-radius: 22px;
-  margin-left: 10px;
+const CardsContainer = styled.View`
+  flex-direction: row;
+  padding-left: 10px;
 `;
 
 const Container = styled.View`
@@ -202,59 +294,34 @@ const TitleBar = styled.View`
 
 const logos = [
   {
-    image: require("../assets/logo-framerx.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017911/q0n8twwqlw7psqerctca.png",
     text: "Frame X",
   },
   {
-    image: require("../assets/logo-figma.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017912/whhicewt2lbwbnzdzpkb.png",
     text: "Figma",
   },
   {
-    image: require("../assets/logo-studio.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017908/mkiqtrklok9q9mjeq71t.png",
     text: "Studio",
   },
   {
-    image: require("../assets/logo-react.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017908/hjaf3kjylamwpxp2rfyh.png",
     text: "React",
   },
   {
-    image: require("../assets/logo-swift.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017907/rruhpsf2ue8rcoe1sb7c.png",
     text: "Swift",
   },
   {
-    image: require("../assets/logo-sketch.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017909/xkzubo1y6bq7pnlxrrjk.png",
     text: "Sketch",
-  },
-];
-
-const cards = [
-  {
-    title: "React Native for Designers",
-    image: require("../assets/background11.jpg"),
-    subtitle: "React Native",
-    caption: "1 of 12 sections",
-    logo: require("../assets/logo-react.png"),
-  },
-  {
-    title: "Styled Components",
-    image: require("../assets/background12.jpg"),
-    subtitle: "React Native",
-    caption: "2 of 12 sections",
-    logo: require("../assets/logo-react.png"),
-  },
-  {
-    title: "Props and Icons",
-    image: require("../assets/background13.jpg"),
-    subtitle: "React Native",
-    caption: "3 of 12 sections",
-    logo: require("../assets/logo-react.png"),
-  },
-  {
-    title: "Static Data and Loop",
-    image: require("../assets/background14.jpg"),
-    subtitle: "React Native",
-    caption: "4 of 12 sections",
-    logo: require("../assets/logo-react.png"),
   },
 ];
 
@@ -262,37 +329,49 @@ const courses = [
   {
     title: "Prototype in InVision Studio",
     subtitle: "10 sections",
-    image: require("../assets/background13.jpg"),
-    logo: require("../assets/logo-studio.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017921/irt5djzxpnx47nk36p6a.jpg",
+    logo:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017908/mkiqtrklok9q9mjeq71t.png",
     author: "Meng To",
-    avatar: require("../assets/avatar.jpg"),
+    avatar:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017911/fboaw2evi6baebld75q3.jpg",
     caption: "Design and interactive prototype",
   },
   {
     title: "React for Designers",
     subtitle: "12 sections",
-    image: require("../assets/background11.jpg"),
-    logo: require("../assets/logo-react.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017922/fsdcugpwc4bnlofiikuz.jpg",
+    logo:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017908/hjaf3kjylamwpxp2rfyh.png",
     author: "Meng To",
-    avatar: require("../assets/avatar.jpg"),
+    avatar:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017911/fboaw2evi6baebld75q3.jpg",
     caption: "Learn to design and code a React site",
   },
   {
     title: "Design and Code with Framer X",
     subtitle: "10 sections",
-    image: require("../assets/background14.jpg"),
-    logo: require("../assets/logo-framerx.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017921/cgx94ezaossbhazor6ty.jpg",
+    logo:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017911/q0n8twwqlw7psqerctca.png",
     author: "Meng To",
-    avatar: require("../assets/avatar.jpg"),
+    avatar:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017911/fboaw2evi6baebld75q3.jpg",
     caption: "Create powerful design and code components for your app",
   },
   {
     title: "Design System in Figma",
     subtitle: "10 sections",
-    image: require("../assets/background6.jpg"),
-    logo: require("../assets/logo-figma.png"),
+    image:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017905/lgfzq7jkq8pqf5xxi6aw.jpg",
+    logo:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017912/whhicewt2lbwbnzdzpkb.png",
     author: "Meng To",
-    avatar: require("../assets/avatar.jpg"),
+    avatar:
+      "https://res.cloudinary.com/joshihemant/image/upload/v1609017911/fboaw2evi6baebld75q3.jpg",
     caption:
       "Complete guide to designing a site using a collaborative design tool",
   },
